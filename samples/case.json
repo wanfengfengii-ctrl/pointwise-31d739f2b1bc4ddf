@@ -1,0 +1,19 @@
+{
+  "width": 2,
+  "transactions": [
+    {"lsn":1,"ops":[{"table":"sites","id":"A","value":{"zone":"east"}},{"table":"sites","id":"B","value":{"zone":"west"}},{"table":"sites","id":"C","value":{"zone":"north"}},{"table":"devices","id":"dA","value":{"site":"A"}},{"table":"devices","id":"dB","value":{"site":"B"}},{"table":"readings","id":"f0","value":{"device":"dA","day":0,"amount":100}},{"table":"readings","id":"f1","value":{"device":"dA","day":0,"amount":-100}},{"table":"readings","id":"f2","value":{"device":"dB","day":0,"amount":70}},{"table":"readings","id":"f3","value":{"device":"dB","day":0,"amount":30}}]},
+    {"lsn":2,"ops":[{"table":"devices","id":"dA","value":{"site":"C"}}]},
+    {"lsn":3,"ops":[{"table":"readings","id":"f0","value":{"device":"dA","day":0,"amount":120}},{"table":"readings","id":"f1","value":{"device":"dA","day":0,"amount":-120}}]},
+    {"lsn":4,"ops":[{"table":"sites","id":"B","value":{"zone":"north"}},{"table":"readings","id":"f3","value":null},{"table":"readings","id":"f2","value":{"device":"dA","day":1,"amount":70}}]}
+  ],
+  "scenarios": {
+    "incident": [["send",1],["drain"],["checkpoint","C0"],["send",2],["deliver",0],["dispatch"],["checkpoint","C1"],["drain"],["recover","C1"],["drain"]],
+    "quiet": [["send",1],["drain"],["checkpoint","C0"],["send",2],["drain"],["checkpoint","C1"],["recover","C1"],["drain"]],
+    "fork_a": [["send",1],["drain"],["checkpoint","C0"],["send",2],["deliver",0],["dispatch"],["commit"],["checkpoint","C1"],["drain"],["recover","C1"],["drain"]],
+    "fork_b": [["send",1],["drain"],["checkpoint","C0"],["send",2],["deliver",0],["deliver",1],["dispatch"],["checkpoint","C1"],["commit"],["recover","C1"],["drain"]],
+    "followup": [["send",1],["drain"],["checkpoint","C0"],["send",2],["deliver",0],["deliver",1],["dispatch"],["checkpoint","C1"],["commit"],["recover","C1"],["send",3],["drain"],["checkpoint","C2"],["recover","C2"],["send",4],["drain"]],
+    "continued": [["send",1],["drain"],["checkpoint","C0"],["send",2],["deliver",0],["dispatch"],["commit"],["checkpoint","C1"],["drain"],["recover","C1"],["send",3],["drain"]],
+    "fork_c": [["send",1],["drain"],["checkpoint","C0"],["send",2],["deliver",0],["deliver",1],["checkpoint","C1"],["dispatch"],["commit"],["recover","C1"],["drain"]],
+    "fork_d": [["send",1],["drain"],["checkpoint","C0"],["send",2],["deliver",0],["deliver",1],["checkpoint","C1"],["recover","C1"],["drain"]]
+  }
+}
