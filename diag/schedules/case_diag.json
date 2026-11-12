@@ -1,0 +1,66 @@
+{
+  "_purpose": "Only schedules are added here; transactions are copied verbatim from samples/case.json. Every scenario is replayable through: python3 incident.py replay diag/schedules/case_diag.json <name>",
+  "width": 2,
+  "transactions": [
+    {"lsn":1,"ops":[{"table":"sites","id":"A","value":{"zone":"east"}},{"table":"sites","id":"B","value":{"zone":"west"}},{"table":"sites","id":"C","value":{"zone":"north"}},{"table":"devices","id":"dA","value":{"site":"A"}},{"table":"devices","id":"dB","value":{"site":"B"}},{"table":"readings","id":"f0","value":{"device":"dA","day":0,"amount":100}},{"table":"readings","id":"f1","value":{"device":"dA","day":0,"amount":-100}},{"table":"readings","id":"f2","value":{"device":"dB","day":0,"amount":70}},{"table":"readings","id":"f3","value":{"device":"dB","day":0,"amount":30}}]},
+    {"lsn":2,"ops":[{"table":"devices","id":"dA","value":{"site":"C"}}]},
+    {"lsn":3,"ops":[{"table":"readings","id":"f0","value":{"device":"dA","day":0,"amount":120}},{"table":"readings","id":"f1","value":{"device":"dA","day":0,"amount":-120}}]},
+    {"lsn":4,"ops":[{"table":"sites","id":"B","value":{"zone":"north"}},{"table":"readings","id":"f3","value":null},{"table":"readings","id":"f2","value":{"device":"dA","day":1,"amount":70}}]}
+  ],
+  "scenarios": {
+    "m_A_accepted_not_committed": [
+      ["send", 1], ["drain"], ["checkpoint", "C0"],
+      ["send", 2], ["deliver", 0], ["deliver", 1],
+      ["dispatch"],
+      ["checkpoint", "C1a"],
+      ["recover", "C1a"], ["drain"]
+    ],
+    "m_A_counterfactual_commit_first": [
+      ["send", 1], ["drain"], ["checkpoint", "C0"],
+      ["send", 2], ["deliver", 0], ["deliver", 1],
+      ["dispatch"], ["commit"],
+      ["checkpoint", "C1b"],
+      ["recover", "C1b"], ["drain"]
+    ],
+    "same_cp_safe_branch": [
+      ["send", 1], ["drain"], ["checkpoint", "C0"],
+      ["send", 2], ["deliver", 0], ["deliver", 1],
+      ["checkpoint", "C1x"],
+      ["recover", "C1x"], ["drain"]
+    ],
+    "same_cp_unsafe_branch": [
+      ["send", 1], ["drain"], ["checkpoint", "C0"],
+      ["send", 2], ["deliver", 0], ["deliver", 1],
+      ["checkpoint", "C1x"],
+      ["dispatch"], ["commit"],
+      ["recover", "C1x"], ["drain"]
+    ],
+    "m_B_inflight_silent": [
+      ["send", 1], ["drain"], ["checkpoint", "C0"],
+      ["send", 2], ["deliver", 0],
+      ["checkpoint", "C1"],
+      ["recover", "C1"], ["drain"]
+    ],
+    "m_B_channel_gap": [
+      ["send", 1], ["drain"], ["checkpoint", "C0"],
+      ["send", 2], ["deliver", 0],
+      ["checkpoint", "C1"],
+      ["recover", "C1"],
+      ["send", 3], ["drain"]
+    ],
+    "m_B_counterfactual_deliver_all": [
+      ["send", 1], ["drain"], ["checkpoint", "C0"],
+      ["send", 2], ["deliver", 0], ["deliver", 1],
+      ["checkpoint", "C1"],
+      ["recover", "C1"], ["drain"]
+    ],
+    "multi_recovery_propagation": [
+      ["send", 1], ["drain"], ["checkpoint", "C0"],
+      ["send", 2], ["deliver", 0], ["deliver", 1],
+      ["dispatch"], ["checkpoint", "C1"], ["commit"],
+      ["recover", "C1"],
+      ["send", 3], ["drain"], ["checkpoint", "C2"], ["recover", "C2"],
+      ["send", 4], ["drain"]
+    ]
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "_purpose": "Independent legal input (same type/reference rules as CONTRACT.md) demonstrating that the impact criteria generalize: offset cancellation inside a group, missing references, zero-amount rows, tombstone then re-create. Replay: python3 incident.py replay diag/schedules/case_general.json <name>",
+  "width": 2,
+  "transactions": [
+    {"lsn":1,"ops":[
+      {"table":"sites","id":"X","value":{"zone":"z1"}},
+      {"table":"sites","id":"Y","value":{"zone":"z2"}},
+      {"table":"devices","id":"dx","value":{"site":"X"}},
+      {"table":"devices","id":"dangling","value":{"site":"GHOST"}},
+      {"table":"readings","id":"r0","value":{"device":"dx","day":5,"amount":40}},
+      {"table":"readings","id":"r1","value":{"device":"dx","day":5,"amount":-40}},
+      {"table":"readings","id":"r2","value":{"device":"dangling","day":5,"amount":999}},
+      {"table":"readings","id":"r3","value":{"device":"dx","day":7,"amount":0}}
+    ]},
+    {"lsn":2,"ops":[{"table":"devices","id":"dx","value":{"site":"Y"}}]},
+    {"lsn":3,"ops":[
+      {"table":"readings","id":"r0","value":{"device":"dx","day":5,"amount":60}},
+      {"table":"readings","id":"r1","value":{"device":"dx","day":5,"amount":-60}}
+    ]},
+    {"lsn":4,"ops":[
+      {"table":"sites","id":"Y","value":null},
+      {"table":"sites","id":"Y","value":{"zone":"z3"}},
+      {"table":"readings","id":"r3","value":null}
+    ]}
+  ],
+  "scenarios": {
+    "offset_hide": [
+      ["send",1],["drain"],["checkpoint","C0"],
+      ["send",2],["deliver",0],["dispatch"],["checkpoint","C1"],["drain"],
+      ["recover","C1"],["drain"]
+    ],
+    "offset_hide_counterfactual": [
+      ["send",1],["drain"],["checkpoint","C0"],
+      ["send",2],["drain"],
+      ["checkpoint","C1"],
+      ["recover","C1"],["drain"]
+    ],
+    "missing_ref_quiet": [
+      ["send",1],["drain"],["checkpoint","C0"],
+      ["send",2],["deliver",0],["checkpoint","C1"],
+      ["recover","C1"],["drain"]
+    ],
+    "tombstone_recreate": [
+      ["send",1],["drain"],["checkpoint","C0"],
+      ["send",2],["drain"],["checkpoint","C1"],["recover","C1"],["drain"],
+      ["send",3],["deliver",0],["dispatch"],["checkpoint","C2"],["drain"],
+      ["recover","C2"],["drain"],
+      ["send",4],["drain"]
+    ]
+  }
+}
